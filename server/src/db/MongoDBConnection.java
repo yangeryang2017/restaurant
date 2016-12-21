@@ -18,6 +18,7 @@ import com.mongodb.Block;
 import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.regex;
@@ -76,7 +77,7 @@ public class MongoDBConnection implements DBConnection {
 
 	@Override
 	public JSONObject getRestaurantsById(String businessId, boolean isVisited) {
-
+		// But it won't work with Front-end.
 		FindIterable<Document> iterable = db.getCollection("restaurants").find(
 				eq("_id", businessId));
 		try {
@@ -156,7 +157,7 @@ public class MongoDBConnection implements DBConnection {
 								.append("name", name)
 								.append("categories", categories)
 								.append("city", city).append("state", state)
-								.append("fulle_address", fullAddress)
+								.append("full_address", fullAddress)
 								.append("stars", stars)
 								.append("latitude", latitude)
 								.append("longitude", longitude)
@@ -165,6 +166,24 @@ public class MongoDBConnection implements DBConnection {
 				list.add(obj);
 			}
 			return new JSONArray(list);
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		return null;
+	}
+
+	public JSONArray filterRestaurants(String userId, String term) {
+		try {
+			Set<JSONObject> set = new HashSet<JSONObject>();
+			FindIterable<Document> iterable = db.getCollection("restaurants").find(Filters.text(term));
+
+			iterable.forEach(new Block<Document>() {
+				@Override
+				public void apply(final Document document) {
+					set.add(getRestaurantsById(document.getString("_id"), false));
+				}
+			});
+			return new JSONArray(set);
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
