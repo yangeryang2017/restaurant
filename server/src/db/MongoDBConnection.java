@@ -45,14 +45,14 @@ public class MongoDBConnection implements DBConnection {
 
 	@Override
 	public void setVisitedRestaurants(String userId, List<String> businessIds) {
-		db.getCollection("users").updateOne(new Document("user_id", userId),
+		db.getCollection("users").updateOne(new Document("_id", userId),
 				new Document("$pushAll", new Document("visited", businessIds)));
 
 	}
 
 	@Override
 	public void unsetVisitedRestaurants(String userId, List<String> businessIds) {
-		db.getCollection("users").updateOne(new Document("user_id", userId),
+		db.getCollection("users").updateOne(new Document("_id", userId),
 				new Document("$pullAll", new Document("visited", businessIds)));
 	}
 
@@ -60,7 +60,7 @@ public class MongoDBConnection implements DBConnection {
 	public Set<String> getVisitedRestaurants(String userId) {
 		Set<String> set = new HashSet<>();
 		FindIterable<Document> iterable = db.getCollection("users").find(
-				new Document("user_id", userId));
+				new Document("_id", userId));
 
 		iterable.forEach(new Block<Document>() {
 			@Override
@@ -78,7 +78,7 @@ public class MongoDBConnection implements DBConnection {
 	public JSONObject getRestaurantsById(String businessId, boolean isVisited) {
 
 		FindIterable<Document> iterable = db.getCollection("restaurants").find(
-				eq("business_id", businessId));
+				eq("_id", businessId));
 		try {
 			return new JSONObject(iterable.first().toJson());
 		} catch (JSONException e) {
@@ -152,7 +152,7 @@ public class MongoDBConnection implements DBConnection {
 					obj.put("is_visited", false);
 				}
 				db.getCollection("restaurants").insertOne(
-						new Document().append("business_id", businessId)
+						new Document().append("_id", businessId)
 								.append("name", name)
 								.append("categories", categories)
 								.append("city", city).append("state", state)
@@ -175,7 +175,7 @@ public class MongoDBConnection implements DBConnection {
 	public Set<String> getCategories(String businessId) {
 		Set<String> set = new HashSet<>();
 		FindIterable<Document> iterable = db.getCollection("restaurants").find(
-				eq("business_id", businessId));
+				eq("_id", businessId));
 		iterable.forEach(new Block<Document>() {
 			@Override
 			public void apply(final Document document) {
@@ -197,7 +197,7 @@ public class MongoDBConnection implements DBConnection {
 		iterable.forEach(new Block<Document>() {
 			@Override
 			public void apply(final Document document) {
-				set.add(document.getString("business_id"));
+				set.add(document.getString("_id"));
 			}
 		});
 		return set;
@@ -206,7 +206,7 @@ public class MongoDBConnection implements DBConnection {
 	@Override
 	public Boolean verifyLogin(String userId, String password) {
 		FindIterable<Document> iterable = db.getCollection("users").find(
-				new Document("user_id", userId));
+				new Document("_id", userId));
 		Document document = iterable.first();
 		return document.getString("password").equals(password);
 	}
@@ -214,7 +214,7 @@ public class MongoDBConnection implements DBConnection {
 	@Override
 	public String getFirstLastName(String userId) {
 		FindIterable<Document> iterable = db.getCollection("users").find(
-				new Document("user_id", userId));
+				new Document("_id", userId));
 		Document document = iterable.first();
 		String firstName = document.getString("first_name");
 		String lastName = document.getString("last_name");
