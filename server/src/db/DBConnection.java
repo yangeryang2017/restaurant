@@ -68,9 +68,10 @@ public interface DBConnection {
 	 * @param userId
 	 * @param lat
 	 * @param lon
+	 * @param term
 	 * @return
 	 */
-	public JSONArray searchRestaurants(String userId, double lat, double lon);
+	public JSONArray searchRestaurants(String userId, double lat, double lon, String term);
 	
 	/**
 	 * Verify if the userId matches the password. 

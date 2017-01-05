@@ -19,11 +19,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.FindOneAndUpdateOptions;
-import com.mongodb.client.model.InsertOneOptions;
-import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.model.UpdateOptions;
-import com.mongodb.client.result.UpdateResult;
 
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.regex;
@@ -125,7 +121,7 @@ public class MongoDBConnection implements DBConnection {
 	}
 
 	@Override
-	public JSONArray searchRestaurants(String userId, double lat, double lon) {
+	public JSONArray searchRestaurants(String userId, double lat, double lon, String term) {
 		try {
 			YelpAPI api = new YelpAPI();
 			JSONObject response = new JSONObject(
@@ -176,14 +172,19 @@ public class MongoDBConnection implements DBConnection {
 						options);
 				list.add(obj);
 			}
-			return new JSONArray(list);
+			if (term == null || term.isEmpty()) {
+				return new JSONArray(list);
+			} else {
+				// Use text search to perform better efficiency
+				return filterRestaurants(term);
+			}
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
 		return null;
 	}
 
-	public JSONArray filterRestaurants(String userId, String term) {
+	private JSONArray filterRestaurants(String term) {
 		try {
 			Set<JSONObject> set = new HashSet<JSONObject>();
 			FindIterable<Document> iterable = db.getCollection("restaurants").find(Filters.text(term));
@@ -191,7 +192,7 @@ public class MongoDBConnection implements DBConnection {
 			iterable.forEach(new Block<Document>() {
 				@Override
 				public void apply(final Document document) {
-					set.add(getRestaurantsById(document.getString("_id"), false));
+					set.add(getRestaurantsById(document.getString("business_id"), false));
 				}
 			});
 			return new JSONArray(set);

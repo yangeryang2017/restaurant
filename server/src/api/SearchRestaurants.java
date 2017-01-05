@@ -42,10 +42,12 @@ public class SearchRestaurants extends HttpServlet {
 		JSONArray array = null;
 		if (request.getParameterMap().containsKey("lat")
 				&& request.getParameterMap().containsKey("lon")) {
+			// term is null or empty by default
+			String term = request.getParameter("term");
 			String userId = (String) session.getAttribute("user");
 			double lat = Double.parseDouble(request.getParameter("lat"));
 			double lon = Double.parseDouble(request.getParameter("lon"));
-			array = connection.searchRestaurants(userId, lat, lon);
+			array = connection.searchRestaurants(userId, lat, lon, term);
 		}
 		RpcParser.writeOutput(response, array);
 	}

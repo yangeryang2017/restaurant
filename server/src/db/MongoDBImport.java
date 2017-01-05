@@ -1,10 +1,8 @@
 package db;
 
-import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.IndexOptions;
-import com.mongodb.client.model.Indexes;
 
 import org.bson.Document;
 
@@ -24,14 +22,17 @@ public class MongoDBImport {
 		IndexOptions indexOptions = new IndexOptions().unique(true);
 		
         //use 1 for ascending index , -1 for descending index 
-		db.getCollection("users").createIndex(new BasicDBObject("user_id", 1), indexOptions);
+		db.getCollection("users").createIndex(new Document("user_id", 1), indexOptions);
 		
 		// make sure business_id is unique.
-		db.getCollection("restaurants").createIndex(new BasicDBObject("business_id", 1), indexOptions);
+		db.getCollection("restaurants").createIndex(new Document("business_id", 1), indexOptions);
 		
-		// use a compound descending key of name, full_address and categories for search. 
-		db.getCollection("restaurants").createIndex(Indexes.descending("name", "full_address", "categories"));
-
+		// use a compound text index of name, full_address and categories for search. 
+		db.getCollection("restaurants").createIndex(
+				new Document()
+					.append("categories", "text")
+					.append("full_address", "text")
+					.append("name", "text"));
 		mongoClient.close();
 	}
 }

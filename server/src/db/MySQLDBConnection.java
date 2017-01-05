@@ -200,7 +200,7 @@ public class MySQLDBConnection implements DBConnection {
 	}
 
 	@Override
-	public JSONArray searchRestaurants(String userId, double lat, double lon) {
+	public JSONArray searchRestaurants(String userId, double lat, double lon, String term) {
 		try {
 			YelpAPI api = new YelpAPI();
 			JSONObject response = new JSONObject(
@@ -244,7 +244,14 @@ public class MySQLDBConnection implements DBConnection {
 				statement.setString(10, imageUrl);
 				statement.setString(11, url);
 				statement.execute();
-				list.add(obj);
+				// Perform filtering if term is specified.
+				if (term == null || term.isEmpty()) {
+					list.add(obj);
+				} else {
+					if (categories.contains(term) || fullAddress.contains(term) || name.contains(term)) {
+						list.add(obj);
+					}
+				}
 			}
 			return new JSONArray(list);
 		} catch (Exception e) {
@@ -259,11 +266,6 @@ public class MySQLDBConnection implements DBConnection {
 			if (conn == null) {
 				return false;
 			}
-//			String sql = "SELECT user_id from users WHERE user_id='" + userId
-//					+ "' and password='" + password + "'";
-//			System.out.println(sql);
-//			Statement stmt = conn.createStatement();
-//			ResultSet rs = stmt.executeQuery(sql);
 
 			String sql = "SELECT user_id from users WHERE user_id = ? and password = ?";
 			PreparedStatement statement = conn.prepareStatement(sql);
@@ -302,7 +304,7 @@ public class MySQLDBConnection implements DBConnection {
 	public static void main(String[] args) {
 		// This is for test purpose
 		MySQLDBConnection conn = new MySQLDBConnection();
-		JSONArray array = conn.searchRestaurants("1111", 37.38, -122.08);
+		JSONArray array = conn.searchRestaurants("1111", 37.38, -122.08, null);
 		System.out.println(array);
 	}
 }
