@@ -19,6 +19,11 @@ import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.InsertOneOptions;
+import com.mongodb.client.model.ReturnDocument;
+import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.result.UpdateResult;
 
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.regex;
@@ -34,7 +39,6 @@ public class MongoDBConnection implements DBConnection {
 		// Connects to local mongodb server.
 		mongoClient = new MongoClient();
 		db = mongoClient.getDatabase(DBUtil.DB_NAME);
-
 	}
 
 	@Override
@@ -48,7 +52,6 @@ public class MongoDBConnection implements DBConnection {
 	public void setVisitedRestaurants(String userId, List<String> businessIds) {
 		db.getCollection("users").updateOne(new Document("user_id", userId),
 				new Document("$pushAll", new Document("visited", businessIds)));
-
 	}
 
 	@Override
@@ -152,17 +155,25 @@ public class MongoDBConnection implements DBConnection {
 				} else {
 					obj.put("is_visited", false);
 				}
-				db.getCollection("restaurants").insertOne(
-						new Document().append("business_id", businessId)
-								.append("name", name)
-								.append("categories", categories)
-								.append("city", city).append("state", state)
-								.append("full_address", fullAddress)
-								.append("stars", stars)
-								.append("latitude", latitude)
-								.append("longitude", longitude)
-								.append("image_url", imageUrl)
-								.append("url", url));
+				// Question: why using upsert instead of insert directly?
+				// Answer: http://stackoverflow.com/questions/17319307/how-to-upsert-with-mongodb-java-driver
+				UpdateOptions options = new UpdateOptions().upsert(true);
+
+				db.getCollection("restaurants").updateOne(
+						new Document().append("business_id", businessId),
+						new Document("$set",
+							new Document()
+									.append("business_id", businessId)
+									.append("name", name)
+									.append("categories", categories)
+									.append("city", city).append("state", state)
+									.append("full_address", fullAddress)
+									.append("stars", stars)
+									.append("latitude", latitude)
+									.append("longitude", longitude)
+									.append("image_url", imageUrl)
+									.append("url", url)),
+						options);
 				list.add(obj);
 			}
 			return new JSONArray(list);
